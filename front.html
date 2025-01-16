@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sorting Algorithm Visualizer</title>
+    
+    <style>
+
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f7f7f7;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      }
+      
+      .container {
+        text-align: center;
+        background-color: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        width: 800px;
+      }
+
+      .controls {
+        margin-bottom: 20px;
+      }
+
+      .controls label,
+      .controls select,
+      .controls input,
+      .controls button {
+        margin: 0 10px;
+      }
+
+      #array-container {
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        height: 300px;
+        border: 1px solid #ddd;
+      }
+
+      .bar {
+        margin: 0 2px;
+        background-color: #4caf50;
+        width: 20px;
+      }
+
+      h1 {
+        color: #000; 
+      }
+
+      .progress-bar {
+        height: 20px;
+        background-color: #ddd;
+        border-radius: 5px;
+        margin-top: 10px;
+        width: 100%;
+        position: relative;
+      }
+
+      .progress-bar-inner {
+        background-color: #4caf50;
+        height: 100%;
+        width: 0%;
+        border-radius: 5px;
+      }
+
+      button.pause-button {
+        background-color: #f44336;
+        color: white;
+        border: none;
+        padding: 5px 20px;
+        cursor: pointer;
+        border-radius: 5px;
+      }
+
+      button.pause-button:hover {
+        background-color: #d32f2f;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Sorting Algorithm Visualizer</h1>
+
+      <div class="controls">
+        <label for="algo">Choose Sorting Algorithm: </label>
+        <select id="algo">
+          <option value="bubble">Bubble Sort</option>
+          <option value="insertion">Insertion Sort</option>
+          <option value="selection">Selection Sort</option>
+          <option value="count">Count Sort</option>
+          <option value="radix">Radix Sort</option>
+          <option value="bucket">Bucket Sort</option>
+          <option value="quick">Quick Sort</option>
+          <option value="heap">Heap Sort</option>
+          <option value="merge">Merge Sort</option>
+        </select>
+
+        <label for="size">Array Size: </label>
+        <input type="number" id="size" value="30" min="5" max="100" />
+
+        <label for="speed">Speed: </label>
+        <input type="range" id="speed" min="1" max="100" value="50" />
+
+        <button onclick="generateArray()">Generate New Array</button>
+        <button onclick="startSorting()">Start Sorting</button>
+        <button class="pause-button" onclick="togglePause()">Pause</button>
+      </div>
+
+      <div class="progress-bar">
+        <div class="progress-bar-inner" id="progress-bar-inner"></div>
+      </div>
+
+      <div class="array-container" id="array-container"></div>
+    </div>
+
+    <script>
+      let array = [];
+      let delay = 100; 
+      let isPaused = false;
+      let progressBarInner = document.getElementById("progress-bar-inner");
+
+      // Generate new random array
+      function generateArray() {
+        const size = document.getElementById("size").value;
+        array = [];
+        for (let i = 0; i < size; i++) {
+          array.push(Math.floor(Math.random() * 500) + 5);
+        }
+        displayArray(array);
+        resetProgress();
+      }
+
+      // Display array as bars
+      function displayArray(arr) {
+        const container = document.getElementById("array-container");
+        container.innerHTML = "";
+        const maxVal = Math.max(...arr); 
+        for (let i = 0; i < arr.length; i++) {
+          const bar = document.createElement("div");
+          bar.style.height = `${(arr[i] / maxVal) * 100}%`;
+          bar.classList.add("bar");
+          container.appendChild(bar);
+        }
+      }
+
+      // Reset the progress bar
+      function resetProgress() {
+        progressBarInner.style.width = "0%";
+      }
+
+      // Update the progress bar
+      function updateProgress(progress) {
+        progressBarInner.style.width = `${progress}%`;
+      }
+
+      // Delay function to visualize sorting
+      function delayTime(ms) {
+        return new Promise((resolve) => { 
+          setTimeout(() => {
+            if (isPaused) {
+              waitForResume(resolve);
+            } else {
+              resolve();
+            }
+          }, ms);
+        });
+      }
+
+      // Wait for resume if paused
+      function waitForResume(resolve) {
+        const interval = setInterval(() => {
+          if (!isPaused) {
+            clearInterval(interval);
+            resolve();
+          }
+        }, 100);
+      }
+
+      // Toggle pause
+      function togglePause() {
+        isPaused = !isPaused;
+        document.querySelector(".pause-button").textContent = isPaused
+          ? "Resume"
+          : "Pause";
+      }
+
+      // Bubble Sort Algorithm
+      async function bubbleSort() {
+        const bars = document.getElementsByClassName("bar");
+        for (let i = 0; i < array.length - 1; i++) {
+          for (let j = 0; j < array.length - i - 1; j++) {
+            bars[j].style.backgroundColor = "red"; 
+            bars[j + 1].style.backgroundColor = "red";
+
+            if (array[j] > array[j + 1]) {
+              let temp = array[j];
+              array[j] = array[j + 1];
+              array[j + 1] = temp;
+
+              bars[j].style.height = `${(array[j] / Math.max(...array)) * 100}%`;
+              bars[j + 1].style.height = `${(array[j + 1] / Math.max(...array)) * 100}%`;
+            }
+
+            await delayTime(delay);
+            updateProgress(((i + 1) / array.length) * 100); 
+            bars[j].style.backgroundColor = "#4caf50"; 
+            bars[j + 1].style.backgroundColor = "#4caf50";
+          }
+        }
+      }
+
+      // Insertion Sort Algorithm
+      async function insertionSort() {
+        const bars = document.getElementsByClassName("bar");
+        for (let i = 1; i < array.length; i++) {
+          let key = array[i];
+          let j = i - 1;
+
+          bars[i].style.backgroundColor = "red";
+
+          while (j >= 0 && array[j] > key) {
+            array[j + 1] = array[j];
+            bars[j].style.height = `${(array[j] / Math.max(...array)) * 100}%`;
+            bars[j + 1].style.height = `${(array[j + 1] / Math.max(...array)) * 100}%`;
+            j--;
+
+            await delayTime(delay);
+            updateProgress(((i + 1) / array.length) * 100);
+          }
+          array[j + 1] = key;
+          bars[j + 1].style.height = `${(key / Math.max(...array)) * 100}%`;
+          bars[i].style.backgroundColor = "#4caf50";
+        }
+      }
+
+      // Selection Sort Algorithm
+      async function selectionSort() {
+        const bars = document.getElementsByClassName("bar");
+        for (let i = 0; i < array.length - 1; i++) {
+          let minIndex = i;
+          bars[i].style.backgroundColor = "red";
+
+          for (let j = i + 1; j < array.length; j++) {
+            bars[j].style.backgroundColor = "yellow";
+            if (array[j] < array[minIndex]) {
+              minIndex = j;
+            }
+
+            await delayTime(delay);
+            bars[j].style.backgroundColor = "#4caf50";
+          }
+
+          if (minIndex !== i) {
+            let temp = array[i];
+            array[i] = array[minIndex];
+            array[minIndex] = temp;
+
+            bars[i].style.height = `${(array[i] / Math.max(...array)) * 100}%`;
+            bars[minIndex].style.height = `${(array[minIndex] / Math.max(...array)) * 100}%`;
+          }
+
+          updateProgress(((i + 1) / array.length) * 100);
+          bars[i].style.background
+          bars[i].style.backgroundColor = "#4caf50";
+        }
+      }
+
+      // Count Sort Algorithm
+      async function countSort() {
+        const bars = document.getElementsByClassName("bar");
+        const max = Math.max(...array);
+        const count = new Array(max + 1).fill(0);
+
+        for (let i = 0; i < array.length; i++) {
+          count[array[i]]++;
+        }
+
+        let index = 0;
+        for (let i = 0; i <= max; i++) {
+          while (count[i] > 0) {
+            array[index] = i;
+            bars[index].style.height = `${(i / max) * 100}%`;
+            bars[index].style.backgroundColor = "#4caf50";
+            index++;
+            count[i]--;
+            await delayTime(delay);
+            updateProgress((index / array.length) * 100);
+          }
+        }
+      }
+
+      // Radix Sort Algorithm
+      async function radixSort() {
+        const bars = document.getElementsByClassName("bar");
+        const max = Math.max(...array);
+        let exp = 1;
+
+        while (Math.floor(max / exp) > 0) {
+          await countSortForRadix(exp, bars);
+          exp *= 10;
+        }
+      }
+
+      // Helper function for Radix Sort (Count Sort by digit)
+      async function countSortForRadix(exp, bars) {
+        const n = array.length;
+        const output = new Array(n).fill(0);
+        const count = new Array(10).fill(0);
+
+        for (let i = 0; i < n; i++) {
+          count[Math.floor(array[i] / exp) % 10]++;
+        }
+
+        for (let i = 1; i < 10; i++) {
+          count[i] += count[i - 1];
+        }
+
+        for (let i = n - 1; i >= 0; i--) {
+          const idx = Math.floor(array[i] / exp) % 10;
+          output[count[idx] - 1] = array[i];
+          count[idx]--;
+        }
+
+        for (let i = 0; i < n; i++) {
+          array[i] = output[i];
+          bars[i].style.height = `${(array[i] / Math.max(...array)) * 100}%`;
+          bars[i].style.backgroundColor = "#4caf50";
+          await delayTime(delay);
+          updateProgress(((i + 1) / array.length) * 100);
+        }
+      }
+
+      // Bucket Sort Algorithm
+      async function bucketSort() {
+        const bars = document.getElementsByClassName("bar");
+        const max = Math.max(...array);
+        const bucketCount = Math.floor(array.length / 10);
+        const buckets = Array.from({ length: bucketCount }, () => []);
+
+        for (let i = 0; i < array.length; i++) {
+          const index = Math.floor((array[i] / max) * (bucketCount - 1));
+          buckets[index].push(array[i]);
+        }
+
+        let index = 0;
+        for (let i = 0; i < bucketCount; i++) {
+          buckets[i].sort((a, b) => a - b);
+          for (let j = 0; j < buckets[i].length; j++) {
+            array[index] = buckets[i][j];
+            bars[index].style.height = `${(buckets[i][j] / max) * 100}%`;
+            bars[index].style.backgroundColor = "#4caf50";
+            index++;
+            await delayTime(delay);
+            updateProgress((index / array.length) * 100);
+          }
+        }
+      }
+
+      // Quick Sort Algorithm
+      async function quickSort(start = 0, end = array.length - 1) {
+        if (start < end) {
+          let pivotIndex = await partition(start, end);
+          await quickSort(start, pivotIndex - 1);
+          await quickSort(pivotIndex + 1, end);
+        }
+      }
+
+      async function partition(start, end) {
+        const bars = document.getElementsByClassName("bar");
+        let pivotValue = array[end];
+        let pivotIndex = start;
+        bars[end].style.backgroundColor = "red"; // Highlight pivot
+
+        for (let i = start; i < end; i++) {
+          bars[i].style.backgroundColor = "yellow"; // Mark current element
+
+          if (array[i] < pivotValue) {
+            [array[i], array[pivotIndex]] = [array[pivotIndex], array[i]];
+            bars[i].style.height = `${(array[i] / Math.max(...array)) * 100}%`;
+            bars[pivotIndex].style.height = `${(array[pivotIndex] / Math.max(...array)) * 100}%`;
+
+            pivotIndex++;
+          }
+
+          await delayTime(delay);
+          bars[i].style.backgroundColor = "#4caf50"; // Reset color
+        }
+
+        [array[pivotIndex], array[end]] = [array[end], array[pivotIndex]];
+        bars[pivotIndex].style.height = `${(array[pivotIndex] / Math.max(...array)) * 100}%`;
+        bars[end].style.height = `${(array[end] / Math.max(...array)) * 100}%`;
+
+        bars[end].style.backgroundColor = "#4caf50"; // Reset pivot color
+        updateProgress(((pivotIndex + 1) / array.length) * 100);
+        return pivotIndex;
+      }
+
+      // Heap Sort Algorithm
+      async function heapSort() {
+        const bars = document.getElementsByClassName("bar");
+
+        // Build heap (rearrange array)
+        for (let i = Math.floor(array.length / 2) - 1; i >= 0; i--) {
+          await heapify(array.length, i);
+        }
+
+        // Extract elements one by one
+        for (let i = array.length - 1; i > 0; i--) {
+          [array[0], array[i]] = [array[i], array[0]];
+          bars[0].style.height = `${(array[0] / Math.max(...array)) * 100}%`;
+          bars[i].style.height = `${(array[i] / Math.max(...array)) * 100}%`;
+          bars[i].style.backgroundColor = "#4caf50"; // Sorted element
+
+          await heapify(i, 0);
+          updateProgress(((array.length - i) / array.length) * 100);
+        }
+      }
+
+      async function heapify(n, i) {
+        const bars = document.getElementsByClassName("bar");
+        let largest = i;
+        let left = 2 * i + 1;
+        let right = 2 * i + 2;
+
+        if (left < n && array[left] > array[largest]) {
+          largest = left;
+        }
+
+        if (right < n && array[right] > array[largest]) {
+          largest = right;
+        }
+
+        if (largest != i) {
+          [array[i], array[largest]] = [array[largest], array[i]];
+
+          bars[i].style.height = `${(array[i] / Math.max(...array)) * 100}%`;
+          bars[largest].style.height = `${(array[largest] / Math.max(...array)) * 100}%`;
+
+          await delayTime(delay);
+          await heapify(n, largest);
+        }
+      }
+
+      // Merge Sort Algorithm
+      async function mergeSort(start = 0, end = array.length - 1) {
+        if (start < end) {
+          let mid = Math.floor((start + end) / 2);
+
+          await mergeSort(start, mid);
+          await mergeSort(mid + 1, end);
+          await merge(start, mid, end);
+        }
+      }
+
+      async function merge(start, mid, end) {
+        const bars = document.getElementsByClassName("bar");
+        let leftArr = array.slice(start, mid + 1);
+        let rightArr = array.slice(mid + 1, end + 1);
+
+        let i = 0, j = 0, k = start;
+
+        while (i < leftArr.length && j < rightArr.length) {
+          bars[k].style.backgroundColor = "red"; // Mark current element
+
+          if (leftArr[i] <= rightArr[j]) {
+            array[k] = leftArr[i];
+            i++;
+          } else {
+            array[k] = rightArr[j];
+            j++;
+          }
+
+          bars[k].style.height = `${(array[k] / Math.max(...array)) * 100}%`;
+          await delayTime(delay);
+          bars[k].style.backgroundColor = "#4caf50"; // Reset color
+          k++;
+        }
+
+        while (i < leftArr.length) {
+          bars[k].style.backgroundColor = "red"; 
+          array[k] = leftArr[i];
+          bars[k].style.height = `${(array[k] / Math.max(...array)) * 100}%`;
+          await delayTime(delay);
+          bars[k].style.backgroundColor = "#4caf50";
+          i++;
+          k++;
+        }
+
+        while (j < rightArr.length) {
+          bars[k].style.backgroundColor = "red"; 
+          array[k] = rightArr[j];
+          bars[k].style.height = `${(array[k] / Math.max(...array)) * 100}%`;
+          await delayTime(delay);
+          bars[k].style.backgroundColor = "#4caf50";
+          j++;
+          k++;
+        }
+
+        updateProgress(((end + 1) / array.length) * 100);
+      }
+
+      // Start sorting based on algorithm selected
+      async function startSorting() {
+        const algo = document.getElementById("algo").value;
+        delay = 101 - document.getElementById("speed").value;
+
+        if (algo === "bubble") {
+          await bubbleSort();
+        } else if (algo === "insertion") {
+          await insertionSort();
+        } else if (algo === "selection") {
+          await selectionSort();
+        } else if (algo === "count") {
+          await countSort();
+        } else if (algo === "radix") {
+          await radixSort();
+        } else if (algo === "bucket") {
+          await bucketSort();
+        } else if (algo === "quick") {
+          await quickSort();
+        } else if (algo === "heap") {
+          await heapSort();
+        } else if (algo === "merge") {
+          await mergeSort();
+        }
+      }
+
+      // Initialize with random array
+      window.onload = generateArray;
+    </script>
+  </body>
+</html>
